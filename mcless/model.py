@@ -105,8 +105,8 @@ class McLess(object):
         """Multi-class Least Error Squared Sum
 
         Args:
-            feature_names (Optional[list[str]], optional): _description_. Defaults to None.
-            target_names (Optional[list[str]], optional): _description_. Defaults to None.
+            feature_names (Optional[list[str]], optional): the names of the features of a input of the model. Defaults to None.
+            target_names (Optional[list[str]], optional): the names of the classification each data point belongs to. Defaults to None.
             feature_expansions (Optional[list[str  |  Callable]], optional): _description_. Defaults to None.
 
 
@@ -141,7 +141,7 @@ class McLess(object):
                 else:
                     return  # TODO: implement Error
         # set the number of features
-        self._feature_expansion_count = len(self.__feature_expansion_functions)
+        self._feature_expansion_count = len(self._feature_expansion_functions)
 
     def fit(self, x_data: NDArray[floating], y_data: NDArray[floating]):
         data_count, self._feature_count = x_data.shape
