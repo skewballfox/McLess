@@ -78,6 +78,7 @@ def _set_weights(A: NDArray[floating], B: NDArray[floating]) -> NDArray[floating
 
 
 class McLess(object):
+
     # NOTE: the prefixed underscores are because python lacks private variables, variables starting with underscores are considered internal implementaion
     # details and not meant to be directly interacted with by users of the class
     # see https://stackoverflow.com/a/1301409/11019565
@@ -101,6 +102,15 @@ class McLess(object):
         target_names: Optional[list[str]] = None,
         feature_expansions: Optional[list[str | Callable]] = None,
     ):
+        """Multi-class Least Error Squared Sum
+
+        Args:
+            feature_names (Optional[list[str]], optional): _description_. Defaults to None.
+            target_names (Optional[list[str]], optional): _description_. Defaults to None.
+            feature_expansions (Optional[list[str  |  Callable]], optional): _description_. Defaults to None.
+
+
+        """
 
         self._feature_expansion_count: int = 0
         self._feature_expansion_functions: list[Callable] = []
@@ -119,8 +129,19 @@ class McLess(object):
             for f in feature_expansions:
                 if type(f) == str:
                     if f == "euclidian":
-                        self.__feature_expansion_functions.append(_euclidian_distance)
-            self._feature_expansion_count = len(self.__feature_expansion_functions)
+                        self._feature_expansion_functions.append(_euclidian_distance)
+                    else:
+                        print(f"Unsupported function specified {f}")
+                        return  # TODO: implement Error
+                elif callable(f):
+                    # check to make sure the input and output is correct, later
+                    self._feature_expansion_functions.append(
+                        f
+                    )  # just take it on faith for now
+                else:
+                    return  # TODO: implement Error
+        # set the number of features
+        self._feature_expansion_count = len(self.__feature_expansion_functions)
 
     def fit(self, x_data: NDArray[floating], y_data: NDArray[floating]):
         data_count, self._feature_count = x_data.shape
