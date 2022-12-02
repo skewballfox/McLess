@@ -33,9 +33,12 @@ test_data_percent = 1 - training_data_percent
 Accuracy: NDArray[float64] = np.zeros(run_count)
 from sklearn.neighbors import KNeighborsClassifier
 
-feature_expansions: list[str | Callable] = ["euclidian"]  # TODO
+feature_expansions: list[str | Callable] = ["euclidean"]  # TODO
 # classifier=KNeighborsClassifier(number_of_classifications)
-classifier = McLess(feature_names=features, target_names=targets)
+classifier = McLess(
+    feature_names=features, target_names=targets, feature_expansions=feature_expansions
+)
+# classifier = McLess()
 time_total_start = time.time()
 
 time_train_start = time_train = avg_train_time = time.time()

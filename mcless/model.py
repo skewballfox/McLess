@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 from typing import Optional, Callable
 
 
-def _euclidian_distance(X: NDArray[floating]) -> NDArray[floating]:
+def _euclidean_distance(X: NDArray[floating]) -> NDArray[floating]:
     """feature expansion function for McLess, Computes a point p such that $\sigma(x) = ||x - p||
 
     Args:
@@ -13,7 +13,9 @@ def _euclidian_distance(X: NDArray[floating]) -> NDArray[floating]:
     Returns:
         NDArray[floating]: the 1D feature expansion  with shape (number of points, 1) to be added to the end of the information matrix
     """
-    return X[:, 0]
+    # length = np.zeros((X.shape[0], 1))
+    # length[:] = np.linalg.norm(X, ord=2, axis=1)
+    return np.linalg.norm(X, ord=2, axis=1)
 
 
 def _create_information_matrix(
@@ -42,7 +44,8 @@ def _create_information_matrix(
     information_matrix = np.ones((data_count, feature_count + 1 + expansion_count))
     information_matrix[:, 1 : feature_count + 1] = X
     for i, f in enumerate(feature_expansions):
-        information_matrix[:, feature_count + i] = f(X)
+        expansion = f(X)
+        information_matrix[:, feature_count + 1 + i] = expansion
     return information_matrix
 
 
@@ -57,6 +60,7 @@ def _set_weights(A: NDArray[floating], B: NDArray[floating]) -> NDArray[floating
     Returns:
         the weights for McLess equal to the pseudoinverse of A matrix multiplied with B,
         the weights should have shape (1 + number of features + number of feature expansions, number of labels).
+        - each row of the weights represents the weight of an individual feature
         Note the first column represents the bias
     """
     normal_matrix: NDArray[floating] = A.T @ A
@@ -65,26 +69,27 @@ def _set_weights(A: NDArray[floating], B: NDArray[floating]) -> NDArray[floating
     # since $(A^{T}A)\hat{W}=A^{T}B$, then $\hat{W}=A^{+}B$
     pseudoinverse: NDArray[floating]
     # print(f"A^T A shape {normal_matrix.shape}")
-    if sign_det * log_det:  # Fails if det == 0
+    # print(f"sign_det {sign_det} log_det {log_det} product {sign_det*log_det}")
+    if sign_det != 0:  # Fails if det == 0
         # if $A^{T}A$ is nonsingular, $A^{+}=(A^{T}A)A^{T}$
         pseudoinverse = np.linalg.inv(normal_matrix) @ A.T
     else:
         # if $A^{T}A$ is singular, $A^{+}=V \Sigma^{-1} U^{T}$
-        U, S, Vh = np.linalg.svd(normal_matrix, compute_uv=True)
+        U, S, Vh = np.linalg.svd(normal_matrix, compute_uv=True, full_matrices=True)
         # unless I'm mistaken, Vh is returned transposed so...
-        pseudoinverse = Vh.T @ np.linalg.inv(S) @ U.T
+        pseudoinverse = Vh.T @ np.linalg.inv(np.diag(S)) @ U.T
 
     return pseudoinverse @ B
 
 
 class McLess(object):
 
-    # NOTE: the prefixed underscores are because python lacks private variables, variables starting with underscores are considered internal implementaion
-    # details and not meant to be directly interacted with by users of the class
+    # NOTE: the prefixed underscores are because python lacks private variables, variables starting with underscores are considered
+    # internal implementation details and not meant to be directly interacted with by users of the class
     # see https://stackoverflow.com/a/1301409/11019565
 
-    # this both list all the variables stored by the class and reduces the amount of memory used by class instances by
-    # not storing it internally as a dict
+    # this both list all the variables stored within the class and reduces the amount of memory used by class instances by
+    # not storing the object internally as a dict
     # see https://book.pythontips.com/en/latest/__slots__magic.html
     __slots__ = [
         "feature_names",  # name of the features each column of the input to the model represents
@@ -105,9 +110,9 @@ class McLess(object):
         """Multi-class Least Error Squared Sum
 
         Args:
-            feature_names (Optional[list[str]], optional): the names of the features of a input of the model. Defaults to None.
-            target_names (Optional[list[str]], optional): the names of the classification each data point belongs to. Defaults to None.
-            feature_expansions (Optional[list[str  |  Callable]], optional): _description_. Defaults to None.
+            feature_names (list[str], optional): the names of the features of a input of the model. Defaults to None.
+            target_names (list[str], optional): the names of the classification each data point belongs to. Defaults to None.
+            feature_expansions (list[str  |  Callable], optional): _description_. Defaults to None.
 
 
         """
@@ -128,8 +133,8 @@ class McLess(object):
         if feature_expansions is not None:
             for f in feature_expansions:
                 if type(f) == str:
-                    if f == "euclidian":
-                        self._feature_expansion_functions.append(_euclidian_distance)
+                    if f == "euclidean":
+                        self._feature_expansion_functions.append(_euclidean_distance)
                     else:
                         print(f"Unsupported function specified {f}")
                         return  # TODO: implement Error
@@ -190,3 +195,8 @@ class McLess(object):
         pred_probs: NDArray[floating] = information_matrix @ self._weight_matrix
 
         return np.argmax(pred_probs, axis=1)
+
+    def get_lines(self):
+        # TODO
+        pass
+        # Lines = np.zeros(())
