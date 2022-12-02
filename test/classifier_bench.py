@@ -50,7 +50,7 @@ classifiers = [
     QuadraticDiscriminantAnalysis(),
     GaussianProcessClassifier(),
     McLess(),
-    McLess(feature_expansions="euclidean"),
+    McLess(feature_expansions=["euclidean"]),
 ]
 
 
