@@ -16,4 +16,8 @@ cd McLess
 poetry install
 ```
 
-the rest of this is a work in progress
+
+to run the benchmark (with venv activated)
+```
+python test/classifier_bench.py
+```
